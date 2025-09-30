@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: taskpilot-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: taskpilot_db
+      MYSQL_USER: taskpilot_user
+      MYSQL_PASSWORD: taskpilot_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - taskpilot-network
+
+  app:
+    build: .
+    container_name: taskpilot-app
+    environment:
+      DB_USERNAME: taskpilot_user
+      DB_PASSWORD: taskpilot_password
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_here}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-your_gemini_api_key_here}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/taskpilot_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mysql
+    networks:
+      - taskpilot-network
+
+volumes:
+  mysql_data:
+
+networks:
+  taskpilot-network:
+    driver: bridge
